@@ -1,0 +1,5 @@
+{
+    "split_output_directory": "G:/Code/YOLO/dataset/temp",
+    "image_size": [640, 480],
+    "num_classes": 10
+}
