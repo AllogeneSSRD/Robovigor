@@ -18,9 +18,9 @@ names_list = ['B1','B2','B3','B4','B5','BO','BS','R1','R2','R3','R4','R5','RO','
 last_time = time.time()
 def detect(opt):
     global last_time
-    source, weights, view_img, save_txt, save_frames, imgsz, save_txt_tidl, kpt_label, ourteam, imgx, imgy = opt.source, opt.weights, opt.view_img, \
+    source, weights, view_img, save_txt, save_frames, imgsz, save_txt_tidl, kpt_label, ourteam, imgx, imgy, arc = opt.source, opt.weights, opt.view_img, \
         opt.save_txt, opt.save_frames, opt.img_size, \
-        opt.save_txt_tidl, opt.kpt_label, opt.ourteam, opt.imgx, opt.imgy
+        opt.save_txt_tidl, opt.kpt_label, opt.ourteam, opt.imgx, opt.imgy, opt.arc
     save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
     print("正在开始检测")
     # cv2.namedWindow('detect_v1', cv2.WINDOW_NORMAL)
@@ -190,19 +190,23 @@ def detect(opt):
                                 # 在框上方绘制标
                                 label = names_list[int(torch.tensor(cls).view(1).tolist()[0])]
                                 # print(f"{cls} label={label}")
-
+                                is_fire = False
                                 if ourteam == 'blue':
                                     bg = 41 # 红
                                     if cls > 6.5:
                                         max_area[area] = [label, average_point, area]
+                                        is_fire = True
                                     # if len(max_area) == 0 and cls > 6.5:
                                     #     max_area[area] = [label, average_point, area]
                                     # elif area > max(max_area) and cls > 6.5:
                                     #     max_area[area] = [label, average_point, area]
                                         # cls 0 ~ 6: Blue, cls 7~13: Red
                                         # names_list = ['B1','B2','B3','B4','B5','BO','BS','R1','R2','R3','R4','R5','RO','RS']
-                                else:
+                                elif ourteam == 'red':
                                     bg = 44 # 蓝
+                                    if cls < 6.5:
+                                        max_area[area] = [label, average_point, area]
+                                        is_fire = True
 
                                 cv2.putText(image, label, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
@@ -237,14 +241,18 @@ def detect(opt):
                             #         average_point = v[1]
                                 print(f"\n\033[{bg};{38}m   {average_point}   \033[0m")
                                 x_a, y_a = average_point
-                                print(f"main|{x_a}|{y_a}")
+                                # print(f"main|{x_a}|{y_a}")
                                 # x_a, y_a = average_point
                                 x, y = imgx, imgy
                                 x = x / 2
                                 y = y / 2
                                 x_d = x_a - x
                                 y_d = y_a - y
-                                print(f"diff|{x_d}|{y_d}\n")
+                                # print(f"diff|{x_d}|{y_d}\n")
+                                x_arc = arc * (x_d / imgx) if x_d != 0 else 0
+                                y_arc = arc * (y_d / imgy) if y_d != 0 else 0
+                                print(f"arc {x_arc} {y_arc} {is_fire}")
+                                print("\n")
 
                             # 保存带有检测框和关键点的图片
                             # cv2.imwrite(output_path, image)
@@ -337,6 +345,7 @@ if __name__ == '__main__':
     parser.add_argument('--ourteam', type=str, default='blue')
     parser.add_argument('--imgx', type=int, default=1280)
     parser.add_argument('--imgy', type=int, default=768)
+    parser.add_argument('--arc', type=int, default=60, help='arc parameter')
     parser.add_argument('--img-size', nargs='+', type=int,
                         default=416, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float,
