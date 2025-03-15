@@ -251,7 +251,7 @@ def detect(opt):
                                 # print(f"diff|{x_d}|{y_d}\n")
                                 x_arc = arc * (x_d / imgx) if x_d != 0 else 0
                                 y_arc = arc * (y_d / imgy) if y_d != 0 else 0
-                                print(f"arc {x_arc} {y_arc} {is_fire}")
+                                print(f"arc {x_arc} {y_arc} {int(is_fire)}")
                                 print("\n")
 
                             # 保存带有检测框和关键点的图片
